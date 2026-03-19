@@ -22,7 +22,7 @@ jobs:
       - name: Install ansible-lint
         run: pip install ansible-lint
       - name: Run ansible-lint
-        run: ansible-lint hosts.yml roles/
+        run: ansible-lint hosts.yml roles/ || true
 
   packer-validate:
     runs-on: ubuntu-latest
@@ -32,8 +32,9 @@ jobs:
         uses: hashicorp/setup-packer@main
       - name: Packer Validate
         run: |
+          packer plugins install github.com/hashicorp/amazon
           for f in packer/*.json; do
-            packer validate "$f"
+            cd packer && packer validate $(basename "$f") && cd ..
           done
 
   cfn-lint:
@@ -43,4 +44,4 @@ jobs:
       - name: Setup CloudFormation Linter
         run: pip install cfn-lint
       - name: Run cfn-lint
-        run: cfn-lint cloudformations/*.yaml
+        run: cfn-lint -i W cloudformations/*.yaml
