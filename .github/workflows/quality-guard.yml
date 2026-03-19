@@ -34,7 +34,7 @@ jobs:
         run: |
           packer plugins install github.com/hashicorp/amazon
           for f in packer/*.json; do
-            packer validate "$f"
+            cd packer && packer validate $(basename "$f") && cd ..
           done
 
   cfn-lint:
@@ -44,4 +44,4 @@ jobs:
       - name: Setup CloudFormation Linter
         run: pip install cfn-lint
       - name: Run cfn-lint
-        run: cfn-lint --ignore-checks W cloudformations/*.yaml
+        run: cfn-lint -i W cloudformations/*.yaml
