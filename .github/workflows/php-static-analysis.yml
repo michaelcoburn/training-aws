@@ -10,7 +10,8 @@ jobs:
   phpstan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout PR
+        uses: actions/checkout@v3
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -18,4 +19,7 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction
       - name: Run PHPStan
-        run: vendor/bin/phpstan analyze
+        run: composer stan
+      - name: Run PHPCS
+        run: composer cs-check
+
