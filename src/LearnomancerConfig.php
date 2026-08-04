@@ -106,4 +106,38 @@ final class LearnomancerConfig
 			$this->$property = $value;
 		}
 	}
+
+	/**
+	 * Scans the root directory for any local configuration files
+	 * and returns an array of unique discovered slugs and regions.
+	 *
+	 * @return array{slugs: array<int, string>, regions: array<int, string>}
+	 */
+	public static function discoverActiveConfig(): array
+	{
+		$slugs   = [];
+		$regions = [];
+
+		$files = glob(dirname(__DIR__) . '/.config-percona-training-*.cnf');
+		if ($files === false)
+		{
+			$files = [];
+		}
+
+		foreach ($files as $file)
+		{
+			$filename = basename($file);
+			// Match: .config-percona-training-{slug}-{region}.cnf
+			if (preg_match('/^\.config-percona-training-([^-]+)-(.+)\.cnf$/i', $filename, $matches))
+			{
+				$slugs[]   = strtoupper($matches[1]);
+				$regions[] = strtolower($matches[2]);
+			}
+		}
+
+		return [
+			'slugs' => array_values(array_unique($slugs)),
+			'regions' => array_values(array_unique($regions)),
+		];
+	}
 }

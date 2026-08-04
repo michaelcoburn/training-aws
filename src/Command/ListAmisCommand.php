@@ -27,7 +27,7 @@ class ListAmisCommand extends BaseCommand
 	{
 		$parser->addArguments([
 			'region' => [
-				'required' => true,
+				'required' => false,
 				'help' => 'The region to list from',
 			],
 		]);
@@ -43,7 +43,37 @@ class ListAmisCommand extends BaseCommand
 	public function execute(Arguments $args, ConsoleIo $io): ?int
 	{
 		// Get arguments
-		$region = $args->getArgument('region') ?: $io->abort('Missing region parameter');
+		$region = $args->getArgument('region');
+
+		if (!$region)
+		{
+			$discovered = Learnomancer\LearnomancerConfig::discoverActiveConfig();
+			$io->err('<error>Error: Missing required argument.</error>');
+			$io->err("Usage: learnomancer list-amis <region>\n");
+
+			if (!empty($discovered['regions']))
+			{
+				$io->out('Discovered active regions in your workspace: ' . implode(', ', $discovered['regions']));
+			}
+			else
+			{
+				$io->out('Standard AWS regions: us-east-1, us-west-1, us-west-2, eu-west-1, etc.');
+			}
+
+			if (!empty($discovered['regions']))
+			{
+				$sampleRegion = $discovered['regions'][0];
+				$io->out("\nSuggested command to run:");
+				$io->out("  bin/learnomancer list-amis {$sampleRegion}");
+			}
+			else
+			{
+				$io->out("\nExample command to run:");
+				$io->out('  bin/learnomancer list-amis us-west-1');
+			}
+
+			return static::CODE_ERROR;
+		}
 
 		/** @var \Learnomancer\Command\Helper\TableHelper $tableHelper */
 		$tableHelper = $io->helper('Learnomancer\Command\Helper\TableHelper');
