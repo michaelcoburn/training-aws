@@ -6,7 +6,7 @@
     	"bin/learnomancer"
     ],
     "require": {
-        "cakephp/console": "^5.3",
+        "cakephp/console": "^5.0",
         "aws/aws-sdk-php": "^3.376"
     },
     "require-dev": {
