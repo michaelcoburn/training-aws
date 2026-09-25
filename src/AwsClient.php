@@ -11,10 +11,13 @@ use Aws\Iam;
  *		GroupId: string,
  *		IpPermissions: array<int, array{
  * 			IpProtocol: string,
- *			FromPort: int,
- *			ToPort: int,
+ *			FromPort?: int,
+ *			ToPort?: int,
  *			IpRanges: array<int, array{
  *				CidrIp: string
+ *			}>,
+ *			UserIdGroupPairs?: array<int, array{
+ *				GroupId: string
  *			}>
  *		}
  *	>}
@@ -754,6 +757,26 @@ final class AwsClient
 					'IpRanges' => [
 						[
 							'CidrIp' => $cidr,
+						],
+					],
+				],
+			],
+		]);
+	}
+
+	/**
+	 * Allows all traffic between instances in the security group
+	 */
+	public function addSelfReferenceIngressRule(string $securityGroupId): void
+	{
+		$this->client->authorizeSecurityGroupIngress([
+			'GroupId' => $securityGroupId,
+			'IpPermissions' => [
+				[
+					'IpProtocol' => '-1',
+					'UserIdGroupPairs' => [
+						[
+							'GroupId' => $securityGroupId,
 						],
 					],
 				],

@@ -35,10 +35,13 @@ class CreateInstancesCommand extends BaseCommand
 			'- app: An instance with sysbench, and helper scripts for generating load',
 			'- mysql1, mysql2, mysql3: Regular PS 8.4 with sample data in S->R/R configuration. Used in the PXC, and GR classes',
 			'- mongodb: Regular PS MongoDb server',
+			'- pg1, pg2, pg3: Percona Distribution for PostgreSQL 17. pg1 is the primary (with sample data), pg2 the standby, pg3 the pgBackRest repo / 3rd HA node',
+			'- pmm: A shared PMM Server. Launch 1 per class (count = 1)',
 			'',
 			'Aliases:',
 			'- pxc: This is an alias for 4 types: "app,mysql1,mysql2,mysql3"',
 			'- gr: Also an alias for 4 types: "app,mysql1,mysql2,mysql3"',
+			'- pg: An alias for 3 types: "pg1,pg2,pg3"',
 		]);
 
 		$parser->setEpilog([
@@ -49,6 +52,10 @@ class CreateInstancesCommand extends BaseCommand
 			'',
 			' - XtraDB Cluster Tutorial class for Skynet Inc, with 4 students:',
 			' create-instances SKY us-east-2 4 pxc i-kjksdjf3k23232',
+			'',
+			' - PostgreSQL class for Acme Corp, with 8 students, plus the shared PMM server:',
+			' create-instances ACME us-west-2 8 pg -i ami-xxxxxx',
+			' create-instances ACME us-west-2 1 pmm -i ami-xxxxxx',
 		]);
 
 		$parser->addArguments([
@@ -73,6 +80,8 @@ class CreateInstancesCommand extends BaseCommand
 					'pxc', 'gr',
 					'node1', 'node2', 'node3', 'node4',
 					'mongodb',
+					'pg1', 'pg2', 'pg3', 'pg',
+					'pmm',
 				],
 				'separator' => ',',
 			],
@@ -146,6 +155,16 @@ class CreateInstancesCommand extends BaseCommand
 		{
 			$io->abort('Could not parse machine type argument.');
 		}
+
+		// Expand aliases into their machine types
+		$machines = array_values(array_unique(array_merge(...array_map(
+			fn(string $machine): array => match ($machine) {
+				'pxc', 'gr' => ['app', 'mysql1', 'mysql2', 'mysql3'],
+				'pg' => ['pg1', 'pg2', 'pg3'],
+				default => [$machine],
+			},
+			$machines,
+		))));
 
 		// Loop over each machine type, and launch them as a group
 		foreach ($machines as $machine)
@@ -227,8 +246,8 @@ class CreateInstancesCommand extends BaseCommand
 
 					$name = "Percona-Training-{$slug}-{$machine}-T{$teamCounter}";
 
-					// scoreboard is always team 0
-					if ($machine == 'scoreboard')
+					// scoreboard and pmm are shared by the class; always team 0
+					if ($machine == 'scoreboard' || $machine == 'pmm')
 					{
 						$name = "Percona-Training-{$slug}-{$machine}-T0";
 					}

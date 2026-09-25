@@ -306,11 +306,20 @@ Types:
 - mysql1, mysql2, mysql3: Regular PS 8.4 with sample data in S->R/R
 configuration. Used in the PXC, and GR classes
 - mongodb: Regular PS MongoDb server
+- pg1, pg2, pg3: Percona Distribution for PostgreSQL 17. pg1 is the
+primary (with sample data), pg2 the standby, pg3 the pgBackRest repo /
+3rd HA node
+- pmm: A shared PMM Server. Launch 1 per class (count = 1)
 
 Aliases:
 
 - pxc: This is a combination alias for 4 types: "app,mysql1,mysql2,mysql3"
 - gr: Also a combination alias for 4 types: "app,mysql1,mysql2,mysql3"
+- pg: A combination alias for 3 types: "pg1,pg2,pg3"
+
+> 🐘 **PostgreSQL class:** `create-class pg-ops` launches one `pg1,pg2,pg3` set per
+> team plus one shared `pmm` server. Start with
+> [`roles/postgres/README.md`](roles/postgres/README.md) for the full sequence and smoke test.
 
 #### Syntax
 
@@ -322,7 +331,7 @@ Aliases:
 
 ```bash
 Usage:
-learnomancer create_instances [-i ami-xxxxxx] [-h] [-o 0] <slug> <region> <count> <db1|db2|app|mysql1|mysql2|mysql3|pxc|gr|node1|node2|node3|node4|mongodb>
+learnomancer create_instances [-i ami-xxxxxx] [-h] [-o 0] <slug> <region> <count> <db1|db2|app|mysql1|mysql2|mysql3|pxc|gr|node1|node2|node3|node4|mongodb|pg1|pg2|pg3|pg|pmm>
 
 Options:
 
