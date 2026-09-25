@@ -267,8 +267,8 @@ class CreateVpcCommand extends BaseCommand
 		{
 			// Inbound SSH
 			if ($permission['IpProtocol'] == 'tcp'
-				&& $permission['FromPort'] == 22
-				&& $permission['ToPort'] == 22
+				&& ($permission['FromPort'] ?? 0) == 22
+				&& ($permission['ToPort'] ?? 0) == 22
 				&& count($permission['IpRanges']) == 1
 				&& $permission['IpRanges'][0]['CidrIp'] == '0.0.0.0/0')
 			{
@@ -278,8 +278,8 @@ class CreateVpcCommand extends BaseCommand
 
 			// Inbound HTTP
 			if ($permission['IpProtocol'] == 'tcp'
-				&& $permission['FromPort'] == 80
-				&& $permission['ToPort'] == 80
+				&& ($permission['FromPort'] ?? 0) == 80
+				&& ($permission['ToPort'] ?? 0) == 80
 				&& count($permission['IpRanges']) == 1
 				&& $permission['IpRanges'][0]['CidrIp'] == '0.0.0.0/0')
 			{
@@ -289,8 +289,8 @@ class CreateVpcCommand extends BaseCommand
 
 			// Inbound Alt-HTTP
 			if ($permission['IpProtocol'] == 'tcp'
-				&& $permission['FromPort'] == 8080
-				&& $permission['ToPort'] == 8080
+				&& ($permission['FromPort'] ?? 0) == 8080
+				&& ($permission['ToPort'] ?? 0) == 8080
 				&& count($permission['IpRanges']) == 1
 				&& $permission['IpRanges'][0]['CidrIp'] == '0.0.0.0/0')
 			{
@@ -300,8 +300,8 @@ class CreateVpcCommand extends BaseCommand
 
 			// Inbound HTTPS
 			if ($permission['IpProtocol'] == 'tcp'
-				&& $permission['FromPort'] == 443
-				&& $permission['ToPort'] == 443
+				&& ($permission['FromPort'] ?? 0) == 443
+				&& ($permission['ToPort'] ?? 0) == 443
 				&& count($permission['IpRanges']) == 1
 				&& $permission['IpRanges'][0]['CidrIp'] == '0.0.0.0/0')
 			{
@@ -337,6 +337,44 @@ class CreateVpcCommand extends BaseCommand
 			$this->ec2->addIngressRule($securityGroupId, 8080, '0.0.0.0/0');
 			$io->out('-- Added ingress rule for Alt-HTTP.');
 		}
+
+		if ($this->hasSelfReferenceRule($securityGroup))
+		{
+			$io->out('-- Found self-reference ingress rule (intra-cluster traffic).');
+		}
+		else
+		{
+			$io->out('-- Did not find self-reference ingress rule. Adding rule..');
+			$this->ec2->addSelfReferenceIngressRule($securityGroupId);
+			$io->out('-- Added self-reference ingress rule (intra-cluster traffic).');
+		}
+	}
+
+	/**
+	 * Checks for a rule allowing all traffic between instances in the security
+	 * group. Needed by the multi-node classes (PXC, GR, and the PostgreSQL HA labs).
+	 *
+	 * @param SecurityGroup $securityGroup
+	 */
+	private function hasSelfReferenceRule(array $securityGroup): bool
+	{
+		foreach ($securityGroup['IpPermissions'] as $permission)
+		{
+			if ($permission['IpProtocol'] != '-1')
+			{
+				continue;
+			}
+
+			foreach ($permission['UserIdGroupPairs'] ?? [] as $pair)
+			{
+				if ($pair['GroupId'] == $securityGroup['GroupId'])
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	/**

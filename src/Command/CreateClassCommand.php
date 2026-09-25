@@ -38,8 +38,8 @@ class CreateClassCommand extends BaseCommand
 			' - MySQL Operations class for Acme Corp, with 9 students:',
 			' create-class mysql-ops ACME us-west-1 9',
 			'',
-			' - XtraDB Cluster Tutorial class for Skynet Inc, with 4 students:',
-			' create-class pg-dev SKY us-east-2 4',
+			' - PostgreSQL Operations class for Skynet Inc, with 4 students:',
+			' create-class pg-ops SKY us-east-2 4 ami-xxxxxx',
 		]);
 
 		$parser->addArguments([
@@ -90,7 +90,7 @@ class CreateClassCommand extends BaseCommand
 		$count = intval($args->getArgument('count')) ?: $io->error('Count must be an integer');
 
 		// @var string $ami
-		$ami = (string)$args->getArgument('ami') ?: $io->error('AMI is required');
+		$ami = (string)$args->getArgument('ami') ?: $io->abort('AMI is required');
 
 		// Class->machine mapping
 		$machineTypes = match ($class)
@@ -128,6 +128,8 @@ class CreateClassCommand extends BaseCommand
 			$io->abort('!! Error creating class. See above error message !!');
 		}
 
+		$this->createSharedInstances($class, $slug, $region, $ami, $io);
+
 		$res = $this->executeCommand(ClassSummaryCommand::class, [$slug], $io);
 		if ($res !== static::CODE_SUCCESS)
 		{
@@ -140,5 +142,29 @@ class CreateClassCommand extends BaseCommand
 		$io->success('!! Class Created !!');
 
 		return static::CODE_SUCCESS;
+	}
+
+	/**
+	 * Launches the instances shared by the whole class (team 0), if the class uses any
+	 */
+	private function createSharedInstances(string $class, string $slug, string $region, string $ami, ConsoleIo $io): void
+	{
+		// PostgreSQL classes share one PMM server
+		if ($class != 'pg-ops' && $class != 'pg-dev')
+		{
+			return;
+		}
+
+		$res = $this->executeCommand(CreateInstancesCommand::class, [
+			$slug,
+			$region,
+			'1',
+			'pmm',
+			"--ami={$ami}",
+		], $io);
+		if ($res !== static::CODE_SUCCESS)
+		{
+			$io->abort('!! Error creating PMM server for class. See above error message !!');
+		}
 	}
 }
