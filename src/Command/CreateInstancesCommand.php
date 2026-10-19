@@ -35,7 +35,7 @@ class CreateInstancesCommand extends BaseCommand
 			'- app: An instance with sysbench, and helper scripts for generating load',
 			'- mysql1, mysql2, mysql3: Regular PS 8.4 with sample data in S->R/R configuration. Used in the PXC, and GR classes',
 			'- mongodb: Regular PS MongoDb server',
-			'- pg1, pg2, pg3: Percona Distribution for PostgreSQL 17. pg1 is the primary (with sample data), pg2 the standby, pg3 the pgBackRest repo / 3rd HA node',
+			'- pg1, pg2, pg3: Percona Distribution for PostgreSQL (17 for pg-ops, 18 for pg-dev). pg1 is the primary (with sample data), pg2 the standby, pg3 the pgBackRest repo / 3rd HA node',
 			'- pmm: A shared PMM Server. Launch 1 per class (count = 1)',
 			'',
 			'Aliases:',

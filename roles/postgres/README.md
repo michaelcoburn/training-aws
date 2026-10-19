@@ -1,12 +1,18 @@
-# Stand up the PostgreSQL-17 training environment — Start Here
+# Stand up the PostgreSQL training environment — Start Here
 
 **You know AWS/Ansible basics but nothing about *this* class's setup. Read this one page
 first.** It gives you the provisioning sequence, how long each step takes, and what to
 verify — then fans out to the detail.
 
-> This builds the environment for the **Percona PostgreSQL DBA & Operations** course. The
-> course content (slides, labs, instructor docs) lives in `pg-training/` in the
-> **`training-material`** repo.
+> This builds the environment for two courses, both with content in the
+> **`training-material`** repo:
+>
+> | Class | Course | PostgreSQL | Content |
+> | ----- | ------ | ---------- | ------- |
+> | `pg-ops` | Percona PostgreSQL DBA & Operations | 17 (role default) | `pg-training/` |
+> | `pg-dev` | PostgreSQL For Developers | **18**: add `-e pg_major=18` to step 3 | `pg-dev-deck/` (deck + `labs/`) |
+>
+> The SSH user on the training AMI (Rocky Linux 9) is `rocky`.
 
 ---
 
@@ -14,10 +20,10 @@ verify — then fans out to the detail.
 
 Per **student**: three EC2 nodes — `pg1` (primary + sysbench client), `pg2` (standby),
 `pg3` (pgBackRest repo / DR / 3rd Patroni node / HAProxy+PgBouncer). Per **class**: one
-shared `pmm` server. All run Percona Distribution for PostgreSQL 17 on the EL9 training
-AMI. The `pg` alias expands to one full `pg1,pg2,pg3` student set.
+shared `pmm` server. All run Percona Distribution for PostgreSQL (17 for `pg-ops`, 18 for
+`pg-dev`) on the Rocky Linux 9 training AMI. The `pg` alias expands to one full `pg1,pg2,pg3` student set.
 
-This `postgres` role brings each node up to a clean, **primary/standby-ready PG 17
+This `postgres` role brings each node up to a clean, **primary/standby-ready PostgreSQL
 cluster** — Patroni/etcd/HAProxy/PgBouncer are installed *during the Block 3 labs*, not
 pre-baked (standing them up is the point of those labs).
 
@@ -27,7 +33,8 @@ pre-baked (standing them up is the point of those labs).
 
 Everything runs from the top of this repo with `./bin/learnomancer` (see the main
 [`README.md`](../../README.md) for install and AWS login). The PostgreSQL class is
-**`pg-ops`** (`pg-dev` is the same environment). Do this **the day before class**, not
+**`pg-ops`**. `pg-dev` builds the same environment on PostgreSQL 18; the developer labs
+use the three nodes as independent servers and install pgAdmin themselves. Do this **the day before class**, not
 the morning of.
 
 Example: class slug `ACME`, 8 students, region `us-west-2`:
@@ -36,7 +43,7 @@ Example: class slug `ACME`, 8 students, region `us-west-2`:
 | - | ---- | ------- | ----- |
 | 1 | Find the current training AMI | `./bin/learnomancer list-amis us-west-2` | — |
 | 2 | **Create the class**: VPC + one pg set per team + shared PMM + inventory | `./bin/learnomancer create-class pg-ops ACME us-west-2 8 <ami>` | ~3 min |
-| 3 | **Provision** (PMM first, then every pg node) | `ansible-playbook -i ansible_ACME hosts.yml` | ~15 min |
+| 3 | **Provision** (PMM first, then every pg node) | `ansible-playbook -i ansible_ACME hosts.yml` (`pg-dev`: add `-e pg_major=18`) | ~15 min |
 | 4 | Print the connection sheet / dashboard URL | `./bin/learnomancer summary ACME` | — |
 | 5 | Smoke-test (below) | — | ~5 min |
 | — | **Tear down after class** | `./bin/learnomancer drop-class ACME us-west-2` | ~3 min |
@@ -79,7 +86,7 @@ SHOW listen_addresses;                     -- '*' — remote connections allowed
 SELECT 1 FROM pg_roles WHERE rolname='replicator';   -- exists — replication labs ready
 ```
 
-And from the shell: `systemctl is-active postgresql-17` → `active`; the `pmm` server's web
+And from the shell: `systemctl is-active postgresql-17` (or `postgresql-18` for `pg-dev`) → `active`; the `pmm` server's web
 UI is reachable on `https://<pmm-public-ip>` (port 443). If `bluebox.film` is empty or the
 `postgres` password isn't set, re-run the `pg` play — those are the two things that bite.
 

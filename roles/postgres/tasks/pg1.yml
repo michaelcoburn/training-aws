@@ -7,8 +7,8 @@
 - name: Install PostGIS for the Bluebox dataset (pg1)
   ansible.builtin.dnf:
     name:
-      - "percona-postgis33_{{ pg_major }}"
-      - "percona-postgis33_{{ pg_major }}-client"
+      - "percona-postgis{{ pg_postgis }}_{{ pg_major }}"
+      - "percona-postgis{{ pg_postgis }}_{{ pg_major }}-client"
     state: present
     disable_gpg_check: true
   ignore_errors: true
