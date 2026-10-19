@@ -1,6 +1,7 @@
 ---
 # =====================================================================
-# Percona Distribution for PostgreSQL 17 — training role (RHEL/EL9)
+# Percona Distribution for PostgreSQL — training role (RHEL/EL9)
+# pg_major: 17 for pg-ops (default), 18 for pg-dev (-e pg_major=18)
 # =====================================================================
 # Machine types: pg1 (primary), pg2 (standby), pg3 (pgBackRest repo /
 # DR / 3rd Patroni node / HAProxy + PgBouncer). One shared `pmm` server
@@ -44,7 +45,7 @@
     state: present
     disable_gpg_check: true
     name:
-      - "percona-pg-stat-monitor{{ pg_major }}"
+      - "percona-pg_stat_monitor{{ pg_major }}"
       - percona-pgbackrest
   ignore_errors: true
 

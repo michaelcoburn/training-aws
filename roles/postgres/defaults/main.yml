@@ -1,12 +1,17 @@
 ---
 # Defaults for the `postgres` training role.
-# Used by the pg1/pg2/pg3 machine types (Percona PostgreSQL DBA & Operations course).
+# Used by the pg1/pg2/pg3 machine types: Percona PostgreSQL DBA & Operations course
+# (pg-ops, PostgreSQL 17) and PostgreSQL For Developers (pg-dev, run the playbook
+# with -e pg_major=18).
 
 pg_major: 17
 pg_bindir: "/usr/pgsql-{{ pg_major }}/bin"
 pg_datadir: "/var/lib/pgsql/{{ pg_major }}/data"
 pg_service: "postgresql-{{ pg_major }}"
 pg_percona_channel: "ppg-{{ pg_major }}"
+# PostGIS series in the ppg repos (percona-postgis35_17, percona-postgis35_18; there is
+# no postgis33 build for 18, and the ppg-17 repo lists only 3.5 as of 2026-10).
+pg_postgis: "35"
 
 # The private range students connect from (training VPC is 10.11.0.0/16;
 # 10.0.0.0/8 is a convenient superset for a throwaway class environment).
